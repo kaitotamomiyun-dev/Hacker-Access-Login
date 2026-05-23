@@ -1,111 +1,147 @@
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
+// Contador de tentativas falhas
 let tentativas = 0;
 let alarmeAtivo = false;
-let isProcessing = false;
 
-// Função auxiliar para criar linhas de log de forma limpa
-function adicionarLinha(container, texto, classe = "") {
-    const span = document.createElement("span");
-    if (classe) span.className = classe;
-    span.innerHTML = texto + "<br>";
-    container.appendChild(span);
-    return span;
+// ===== MATRIX ANIMATION =====
+let matrixActive = true;
+const matrixChars = [];
+const maxMatrixChars = 30;
+
+function createMatrixChar() {
+    const matrixBackground = document.getElementById('matrix-background');
+    if (!matrixBackground) return;
+
+    const char = document.createElement('div');
+    char.className = 'matrix-char';
+    char.textContent = Math.random() > 0.5 ? '0' : '1';
+    
+    const randomLeft = Math.random() * window.innerWidth;
+    const randomDuration = 5 + Math.random() * 10; // 5-15 segundos
+    const randomDelay = Math.random() * 2; // 0-2 segundos de delay
+    
+    char.style.left = randomLeft + 'px';
+    char.style.animationDuration = randomDuration + 's';
+    char.style.animationDelay = randomDelay + 's';
+    
+    matrixBackground.appendChild(char);
+    matrixChars.push(char);
+
+    // Remove o elemento após a animação terminar
+    setTimeout(() => {
+        char.remove();
+        const index = matrixChars.indexOf(char);
+        if (index > -1) matrixChars.splice(index, 1);
+    }, (randomDuration + randomDelay) * 1000);
 }
 
-// Animação de pontos melhorada
-async function animarPontos(container, textoBase, tempo) {
-    const passos = tempo / 250;
-    const elementoLinha = document.createElement("span");
-    container.appendChild(elementoLinha);
+function startMatrixAnimation() {
+    if (!matrixActive) return;
     
+    // Cria novos caracteres continuamente
+    if (matrixChars.length < maxMatrixChars) {
+        createMatrixChar();
+    }
+    
+    requestAnimationFrame(startMatrixAnimation);
+}
+
+function setMatrixRed(isRed) {
+    matrixChars.forEach(char => {
+        if (isRed) {
+            char.classList.add('red');
+        } else {
+            char.classList.remove('red');
+        }
+    });
+}
+
+// ===== ANIMAÇÃO DE PONTOS =====
+async function animarPontos(elemento, tempoTotalMs) {
+    const passos = tempoTotalMs / 250;
     let pontos = "";
+
     for (let i = 0; i < passos; i++) {
-        pontos = (pontos === "...") ? "" : pontos + ".";
-        elementoLinha.innerText = `${textoBase}${pontos}`;
+        if (pontos === "...") {
+            pontos = "";
+        } else {
+            pontos += ".";
+        }
+        elemento.innerHTML = elemento.innerHTML.replace(/\.*$/, pontos);
         await sleep(250);
     }
-    elementoLinha.innerHTML += "<br>";
+    elemento.innerHTML = elemento.innerHTML.replace(/\.*$/, "") + "<br>";
 }
 
+// ===== FUNÇÃO DE LOGIN =====
 async function login() {
-    if (alarmeAtivo || isProcessing) return;
+    // Se o alarme já estiver ativo, bloqueia novos cliques de login até o reset
+    if (alarmeAtivo) return;
 
-    isProcessing = true;
-    const output = document.getElementById("output");
-    const box = document.getElementById("terminal-box");
-    const btn = document.getElementById("loginBtn");
+    const output = document.getElementById('output');
+    const terminalBox = document.getElementById('terminal-box');
+    
+    output.innerHTML = ""; 
+    tentativas++; // Incrementa a tentativa atual
 
-    btn.disabled = true;
-    btn.innerText = "[ PROCESSING ]";
-    tentativas++;
+    // Sequência padrão de carregamento hacker
+    output.innerHTML += "> INITIALIZING UPLINK TO CIA MAIN_FRAME";
+    await animarPontos(output, 750);
 
-    try {
-        if (tentativas === 1) output.innerHTML = "";
+    output.innerHTML += "> DECRYPTING CREDENTIALS";
+    await animarPontos(output, 1000);
 
-        await animarPontos(output, "> INITIALIZING CONNECTION", 800);
-        await animarPontos(output, "> VERIFYING CREDENTIALS", 1000);
+    // Se ainda não chegou na 3ª tentativa, dá apenas um erro simples de acesso negado
+    if (tentativas < 3) {
+        await sleep(300);
+        output.innerHTML += `<span style="color: #ffcc00;">> ERROR: ACCESS DENIED (${tentativas}/3). RE-ENTER CREDENTIALS...</span>`;
+        return;
+    }
 
-        await sleep(400);
+    // --- SE CHEGOU NA 3ª TENTATIVA: ATIVA O ALARME ---
+    output.innerHTML += "> OVERRIDING SECURITY GATEWAY";
+    await animarPontos(output, 1000);
 
-        if (tentativas < 3) {
-            adicionarLinha(output, `> ACCESS DENIED (${tentativas}/3)`, "denied-text");
-            btn.disabled = false;
-            btn.innerText = "[ EXECUTE LOGIN ]";
-            isProcessing = false;
-            return;
-        }
+    await sleep(400);
+    terminalBox.classList.add('panic-mode');
+    alarmeAtivo = true;
+    
+    // Ativa o efeito vermelho na Matrix
+    setMatrixRed(true);
+    
+    output.innerHTML += `<span class="intrusion-detected">
+=====================================<br>
+[!] EMERGENCY ALERT: INTRUSION DETECTED!<br>
+[!] 3 FAILED ATTEMPTS - TRACE ROUTE INITIATED<br>
+[!] CLICK ON INPUT TO RESET TERMINAL<br>
+=====================================</span>`;
+}
 
-        // ALARME ATIVADO
-        await animarPontos(output, "> OVERRIDE DETECTED", 900);
+// ===== FUNÇÃO DE RESET DO ALARME =====
+function resetarAlarme() {
+    if (alarmeAtivo) {
+        const terminalBox = document.getElementById('terminal-box');
+        const output = document.getElementById('output');
         
-        box.classList.add("panic-mode");
-        alarmeAtivo = true;
-
-        const alerta = `
-        =====================================<br>
-        [!] INTRUSION DETECTED<br>
-        [!] SYSTEM LOCKED<br>
-        [!] TOUCH INPUT TO RESET<br>
-        =====================================`;
+        terminalBox.classList.remove('panic-mode'); // Para de tremer e desliga o vermelho
+        output.innerHTML = "<span style='color: #39ff14;'>> Terminal reseted. Ready for new input...</span>";
         
-        adicionarLinha(output, alerta, "intrusion-detected");
-        btn.innerText = "[ BLOCKED ]";
-
-    } catch (err) {
-        console.error(err);
-        adicionarLinha(output, "> SYSTEM FAILURE", "error-text");
-        btn.disabled = false;
-        btn.innerText = "[ EXECUTE LOGIN ]";
-        isProcessing = false;
+        // Desativa o efeito vermelho na Matrix
+        setMatrixRed(false);
+        
+        // Reseta o contador e o estado do alarme
+        tentativas = 0;
+        alarmeAtivo = false;
     }
 }
 
-function resetarAlarme() {
-    if (!alarmeAtivo) return;
-
-    const box = document.getElementById("terminal-box");
-    const output = document.getElementById("output");
-    const btn = document.getElementById("loginBtn");
-
-    box.classList.remove("panic-mode");
-    output.innerHTML = "<span style='color:#39ff14'>> SYSTEM RESTORED</span><br>";
-
-    tentativas = 0;
-    alarmeAtivo = false;
-    isProcessing = false;
-
-    btn.disabled = false;
-    btn.innerText = "[ EXECUTE LOGIN ]";
-}
-
-// Inicialização centralizada
-document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById("loginBtn");
-    const user = document.getElementById("username");
-    const pass = document.getElementById("password");
-
-    if (btn) btn.addEventListener("click", login);
-    if (user) user.addEventListener("focus", resetarAlarme);
-    if (pass) pass.addEventListener("focus", resetarAlarme);
-});
+// ===== INICIALIZAÇÃO DA PÁGINA =====
+window.onload = function() {
+    // Adiciona listeners nos inputs
+    document.getElementById('username').addEventListener('focus', resetarAlarme);
+    document.getElementById('password').addEventListener('focus', resetarAlarme);
+    
+    // Inicia a animação Matrix
+    startMatrixAnimation();
+};
