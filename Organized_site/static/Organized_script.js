@@ -1,82 +1,111 @@
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-// Contador de tentativas falhas
 let tentativas = 0;
 let alarmeAtivo = false;
+let isProcessing = false;
 
-async function animarPontos(elemento, tempoTotalMs) {
-    const passos = tempoTotalMs / 250;
+// Função auxiliar para criar linhas de log de forma limpa
+function adicionarLinha(container, texto, classe = "") {
+    const span = document.createElement("span");
+    if (classe) span.className = classe;
+    span.innerHTML = texto + "<br>";
+    container.appendChild(span);
+    return span;
+}
+
+// Animação de pontos melhorada
+async function animarPontos(container, textoBase, tempo) {
+    const passos = tempo / 250;
+    const elementoLinha = document.createElement("span");
+    container.appendChild(elementoLinha);
+    
     let pontos = "";
-
     for (let i = 0; i < passos; i++) {
-        if (pontos === "...") {
-            pontos = "";
-        } else {
-            pontos += ".";
-        }
-        elemento.innerHTML = elemento.innerHTML.replace(/\.*$/, pontos);
+        pontos = (pontos === "...") ? "" : pontos + ".";
+        elementoLinha.innerText = `${textoBase}${pontos}`;
         await sleep(250);
     }
-    elemento.innerHTML = elemento.innerHTML.replace(/\.*$/, "") + "<br>";
+    elementoLinha.innerHTML += "<br>";
 }
 
 async function login() {
-    // Se o alarme já estiver ativo, bloqueia novos cliques de login até o reset
-    if (alarmeAtivo) return;
+    if (alarmeAtivo || isProcessing) return;
 
-    const output = document.getElementById('output');
-    const terminalBox = document.getElementById('terminal-box');
-    
-    output.innerHTML = ""; 
-    tentativas++; // Incrementa a tentativa atual
+    isProcessing = true;
+    const output = document.getElementById("output");
+    const box = document.getElementById("terminal-box");
+    const btn = document.getElementById("loginBtn");
 
-    // Sequência padrão de carregamento hacker
-    output.innerHTML += "> INITIALIZING UPLINK TO CIA MAIN_FRAME";
-    await animarPontos(output, 750);
+    btn.disabled = true;
+    btn.innerText = "[ PROCESSING ]";
+    tentativas++;
 
-    output.innerHTML += "> DECRYPTING CREDENTIALS";
-    await animarPontos(output, 1000);
+    try {
+        if (tentativas === 1) output.innerHTML = "";
 
-    // Se ainda não chegou na 3ª tentativa, dá apenas um erro simples de acesso negado
-    if (tentativas < 3) {
-        await sleep(300);
-        output.innerHTML += `<span style="color: #ffcc00;">> ERROR: ACCESS DENIED (${tentativas}/3). RE-ENTER CREDENTIALS...</span>`;
-        return;
+        await animarPontos(output, "> INITIALIZING CONNECTION", 800);
+        await animarPontos(output, "> VERIFYING CREDENTIALS", 1000);
+
+        await sleep(400);
+
+        if (tentativas < 3) {
+            adicionarLinha(output, `> ACCESS DENIED (${tentativas}/3)`, "denied-text");
+            btn.disabled = false;
+            btn.innerText = "[ EXECUTE LOGIN ]";
+            isProcessing = false;
+            return;
+        }
+
+        // ALARME ATIVADO
+        await animarPontos(output, "> OVERRIDE DETECTED", 900);
+        
+        box.classList.add("panic-mode");
+        alarmeAtivo = true;
+
+        const alerta = `
+        =====================================<br>
+        [!] INTRUSION DETECTED<br>
+        [!] SYSTEM LOCKED<br>
+        [!] TOUCH INPUT TO RESET<br>
+        =====================================`;
+        
+        adicionarLinha(output, alerta, "intrusion-detected");
+        btn.innerText = "[ BLOCKED ]";
+
+    } catch (err) {
+        console.error(err);
+        adicionarLinha(output, "> SYSTEM FAILURE", "error-text");
+        btn.disabled = false;
+        btn.innerText = "[ EXECUTE LOGIN ]";
+        isProcessing = false;
     }
-
-    // --- SE CHEGOU NA 3ª TENTATIVA: ATIVA O ALARME ---
-    output.innerHTML += "> OVERRIDING SECURITY GATEWAY";
-    await animarPontos(output, 1000);
-
-    await sleep(400);
-    terminalBox.classList.add('panic-mode');
-    alarmeAtivo = true;
-    
-    output.innerHTML += `<span class="intrusion-detected">
-=====================================<br>
-[!] EMERGENCY ALERT: INTRUSION DETECTED!<br>
-[!] 3 FAILED ATTEMPTS - TRACE ROUTE INITIATED<br>
-[!] CLICK ON INPUT TO RESET TERMINAL<br>
-=====================================</span>`;
 }
 
-// Função para desligar o alarme quando o usuário focar em algum input
 function resetarAlarme() {
-    if (alarmeAtivo) {
-        const terminalBox = document.getElementById('terminal-box');
-        const output = document.getElementById('output');
-        
-        terminalBox.classList.remove('panic-mode'); // Para de tremer e desliga o vermelho
-        output.innerHTML = "<span style='color: #39ff14;'>> Terminal reseted. Ready for new input...</span>";
-        
-        // Reseta o contador e o estado do alarme
-        tentativas = 0;
-        alarmeAtivo = false;
-    }
+    if (!alarmeAtivo) return;
+
+    const box = document.getElementById("terminal-box");
+    const output = document.getElementById("output");
+    const btn = document.getElementById("loginBtn");
+
+    box.classList.remove("panic-mode");
+    output.innerHTML = "<span style='color:#39ff14'>> SYSTEM RESTORED</span><br>";
+
+    tentativas = 0;
+    alarmeAtivo = false;
+    isProcessing = false;
+
+    btn.disabled = false;
+    btn.innerText = "[ EXECUTE LOGIN ]";
 }
 
-// Adiciona o evento de escuta ("onfocus") nos campos de input assim que a página carrega
-window.onload = function() {
-    document.getElementById('username').addEventListener('focus', resetarAlarme);
-    document.getElementById('password').addEventListener('focus', resetarAlarme);
-};
+// Inicialização centralizada
+document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById("loginBtn");
+    const user = document.getElementById("username");
+    const pass = document.getElementById("password");
+
+    if (btn) btn.addEventListener("click", login);
+    if (user) user.addEventListener("focus", resetarAlarme);
+    if (pass) pass.addEventListener("focus", resetarAlarme);
+});
