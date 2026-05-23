@@ -1,6 +1,7 @@
+/* --- ESTILOS GERAIS --- */
 body {
     background: #020b02;
-    color: #39ff14; /* Verde Neon clássico */
+    color: #39ff14;
     font-family: 'Share Tech Mono', monospace;
     display: flex;
     justify-content: center;
@@ -11,20 +12,16 @@ body {
     text-shadow: 0 0 5px rgba(57, 255, 20, 0.5);
 }
 
-/* Efeito de linhas de TV antiga / Monitor CRT */
 .scanlines {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: linear-gradient(
-        rgba(18, 16, 16, 0) 50%, 
-        rgba(0, 0, 0, 0.25) 50%
-    );
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
     background-size: 100% 4px;
     z-index: 10;
     pointer-events: none;
 }
 
-/* Background Matrix com números caindo */
+/* --- MATRIX BACKGROUND --- */
 .matrix-background {
     position: fixed;
     top: 0;
@@ -32,38 +29,34 @@ body {
     width: 100%;
     height: 100%;
     z-index: 0;
-    overflow: hidden;
+    pointer-events: none;
 }
 
 .matrix-char {
     position: absolute;
+    top: -20px; /* Começa fora da tela no topo */
     color: #39ff14;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 20px;
-    opacity: 0.1;
-    text-shadow: 0 0 5px rgba(57, 255, 20, 0.3);
-    pointer-events: none;
+    font-size: 18px;
+    font-weight: bold;
+    text-shadow: 0 0 8px rgba(57, 255, 20, 0.8);
     user-select: none;
-    animation: fall linear infinite;
+    will-change: transform, opacity; /* Otimização de GPU */
+    animation: fall linear forwards;
 }
 
 .matrix-char.red {
     color: #ff003c;
-    text-shadow: 0 0 10px rgba(255, 0, 60, 0.6);
-    opacity: 0.3;
+    text-shadow: 0 0 10px #ff003c, 0 0 20px #ff003c;
 }
 
 @keyframes fall {
-    from {
-        transform: translateY(-100vh);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(100vh);
-        opacity: 0;
-    }
+    0% { transform: translateY(0); opacity: 0; }
+    10% { opacity: 0.8; }
+    85% { opacity: 0.8; }
+    100% { transform: translateY(100vh); opacity: 0; }
 }
 
+/* --- TERMINAL --- */
 main {
     position: relative;
     z-index: 5;
@@ -76,7 +69,7 @@ main {
     box-shadow: 0 0 25px rgba(57, 255, 20, 0.4), inset 0 0 15px rgba(57, 255, 20, 0.2);
     text-align: center;
     width: 380px;
-    position: relative;
+    transition: all 0.3s ease;
 }
 
 .terminal-header {
@@ -87,11 +80,7 @@ main {
     opacity: 0.7;
 }
 
-h1 {
-    font-size: 24px;
-    margin-bottom: 25px;
-    letter-spacing: 2px;
-}
+h1 { font-size: 24px; margin-bottom: 25px; letter-spacing: 2px; }
 
 .input-field {
     display: block;
@@ -104,13 +93,7 @@ h1 {
     font-family: 'Share Tech Mono', monospace;
     font-size: 16px;
     outline: none;
-    transition: all 0.3s;
     text-align: center;
-}
-
-.input-field:focus {
-    box-shadow: 0 0 15px rgba(57, 255, 20, 0.6);
-    background: rgba(0, 40, 0, 0.7);
 }
 
 .login-btn {
@@ -121,15 +104,11 @@ h1 {
     font-size: 16px;
     padding: 10px 25px;
     cursor: pointer;
-    transition: all 0.2s;
     font-weight: bold;
+    transition: 0.2s;
 }
 
-.login-btn:hover {
-    background: #39ff14;
-    color: #000;
-    box-shadow: 0 0 15px #39ff14;
-}
+.login-btn:hover { background: #39ff14; color: #000; }
 
 #output {
     margin-top: 25px;
@@ -141,11 +120,10 @@ h1 {
     min-height: 100px;
 }
 
-/* Animação de Alerta Vermelho (CSS de Hollywood) */
+/* --- ESTILOS DE PÂNICO --- */
 .intrusion-detected {
     color: #ff003c !important;
-    text-shadow: 0 0 10px #ff003c, 0 0 20px #ff003c !important;
-    font-weight: bold;
+    text-shadow: 0 0 10px #ff003c;
     animation: piscar 0.5s infinite alternate;
 }
 
@@ -155,21 +133,22 @@ h1 {
     animation: tremer 0.15s infinite;
 }
 
-@keyframes piscar {
-    from { opacity: 1; }
-    to { opacity: 0.4; }
-}
+@keyframes piscar { from { opacity: 1; } to { opacity: 0.4; } }
 
 @keyframes tremer {
-    0% { transform: translate(1px, 1px) rotate(0deg); }
-    10% { transform: translate(-1px, -2px) rotate(-1deg); }
-    20% { transform: translate(-3px, 0px) rotate(1deg); }
-    30% { transform: translate(0px, 2px) rotate(0deg); }
-    40% { transform: translate(1px, -1px) rotate(1deg); }
-    50% { transform: translate(-1px, 2px) rotate(-1deg); }
-    60% { transform: translate(-3px, 1px) rotate(0deg); }
-    70% { transform: translate(2px, 1px) rotate(-1deg); }
-    80% { transform: translate(-1px, -1px) rotate(1deg); }
-    90% { transform: translate(2px, 2px) rotate(0deg); }
-    100% { transform: translate(1px, -2px) rotate(-1deg); }
+    0% { transform: translate(1px, 1px); }
+    50% { transform: translate(-1px, -2px); }
+    100% { transform: translate(1px, 1px); }
+}
+
+/* Estilo para quando os elementos estiverem bloqueados */
+input:disabled, button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    border-color: #555 !important;
+}
+
+/* Garante que o cursor volte ao normal ao resetar */
+input, button {
+    transition: opacity 0.3s, border-color 0.3s;
 }
