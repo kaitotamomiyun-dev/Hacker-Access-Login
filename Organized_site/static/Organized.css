@@ -24,6 +24,51 @@ body {
     pointer-events: none;
 }
 
+/* Background Matrix com números caindo */
+.matrix-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.matrix-char {
+    position: absolute;
+    color: #39ff14;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 20px;
+    opacity: 0.1;
+    text-shadow: 0 0 5px rgba(57, 255, 20, 0.3);
+    pointer-events: none;
+    user-select: none;
+    animation: fall linear infinite;
+}
+
+.matrix-char.red {
+    color: #ff003c;
+    text-shadow: 0 0 10px rgba(255, 0, 60, 0.6);
+    opacity: 0.3;
+}
+
+@keyframes fall {
+    from {
+        transform: translateY(-100vh);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(100vh);
+        opacity: 0;
+    }
+}
+
+main {
+    position: relative;
+    z-index: 5;
+}
+
 .container {
     background: rgba(2, 15, 2, 0.85);
     border: 2px solid #39ff14;
