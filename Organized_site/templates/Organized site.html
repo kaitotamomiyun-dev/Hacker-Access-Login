@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>CIA // CENTRAL INTELLIGENCE AGENCY</title>
+    <!-- Importando uma fonte hacker bem mais estilosa que a Courier -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='Organized.css') }}">
+</head>
+
+<body>
+    <!-- Efeito de tela CRT antiga -->
+    <div class="scanlines"></div>
+
+    <main>
+        <div class="container" id="terminal-box">
+            <div class="terminal-header">SYS.ADMIN@CIA.GOV // MAIN_FRAME</div>
+            <h1>ACCESS TERMINAL</h1>
+            
+            <div class="input-group">
+                <input type="text" class="input-field" id="username" placeholder="[ ENTER USERNAME ]" autocomplete="off">
+            </div>
+            <div class="input-group">
+                <input type="password" class="input-field" id="password" placeholder="[ ENTER PASSWORD ]">
+            </div>
+            
+            <button class="login-btn" onclick="login()">[ EXECUTE LOGIN ]</button>
+            <div id="output"></div>
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='Organized_script.js') }}"></script>
+</body>
+</html>
